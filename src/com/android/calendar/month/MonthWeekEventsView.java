@@ -17,7 +17,6 @@
 package com.android.calendar.month;
 
 import com.android.calendar.Event;
-import com.android.calendar.LunarUtils;
 import com.android.calendar.R;
 import com.android.calendar.Utils;
 
@@ -32,9 +31,15 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Paint.Align;
+import android.graphics.Paint.FontMetrics;
 import android.graphics.Paint.Style;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
+import android.mokee.lunar.Lunar;
+import android.mokee.lunar.LunarFestival;
+import android.mokee.lunar.SolarHoliDay;
+import android.mokee.lunar.SolarTerm;
+import android.mokee.utils.MoKeeUtils;
 import android.provider.CalendarContract.Attendees;
 import android.text.TextPaint;
 import android.text.TextUtils;
@@ -48,11 +53,14 @@ import android.view.accessibility.AccessibilityManager;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Formatter;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+
+import android.util.DisplayMetrics;
 
 public class MonthWeekEventsView extends SimpleWeekView {
 
@@ -65,7 +73,7 @@ public class MonthWeekEventsView extends SimpleWeekView {
 
     /* NOTE: these are not constants, and may be multiplied by a scale factor */
     private static int TEXT_SIZE_MONTH_NUMBER = 32;
-    private static int TEXT_SIZE_LUNAR = 10;
+    private static int TEXT_SIZE_LUNAR_NUMBER = 10;
     private static int TEXT_SIZE_EVENT = 12;
     private static int TEXT_SIZE_EVENT_TITLE = 14;
     private static int TEXT_SIZE_MORE_EVENTS = 12;
@@ -91,7 +99,6 @@ public class MonthWeekEventsView extends SimpleWeekView {
     private static int DAY_SEPARATOR_VERTICAL_LENGTH = 53;
     private static int DAY_SEPARATOR_VERTICAL_LENGHT_PORTRAIT = 64;
     private static int MIN_WEEK_WIDTH = 50;
-    private static int LUNAR_PADDING_LUNAR = 2;
 
     private static int EVENT_X_OFFSET_LANDSCAPE = 38;
     private static int EVENT_Y_OFFSET_LANDSCAPE = 8;
@@ -118,6 +125,8 @@ public class MonthWeekEventsView extends SimpleWeekView {
     // This is for drawing the outlines around event chips and supports up to 10
     // events being drawn on each day. The code will expand this if necessary.
     protected FloatRef mEventOutlines = new FloatRef(10 * 4 * 4 * 7);
+
+
 
     protected static StringBuilder mStringBuilder = new StringBuilder(50);
     // TODO recreate formatter when locale changes
@@ -361,7 +370,6 @@ public class MonthWeekEventsView extends SimpleWeekView {
                 SIDE_PADDING_WEEK_NUMBER *= mScale;
                 SPACING_WEEK_NUMBER *= mScale;
                 TEXT_SIZE_MONTH_NUMBER *= mScale;
-                TEXT_SIZE_LUNAR *= mScale;
                 TEXT_SIZE_EVENT *= mScale;
                 TEXT_SIZE_EVENT_TITLE *= mScale;
                 TEXT_SIZE_MORE_EVENTS *= mScale;
@@ -397,6 +405,9 @@ public class MonthWeekEventsView extends SimpleWeekView {
         loadColors(getContext());
         // TODO modify paint properties depending on isMini
 
+        DisplayMetrics dm = this.getResources().getDisplayMetrics();
+        int LUNAR_NUMBER_SIZE = (int) (TEXT_SIZE_LUNAR_NUMBER* dm.density);
+
         mMonthNumPaint = new Paint();
         mMonthNumPaint.setFakeBoldText(false);
         mMonthNumPaint.setAntiAlias(true);
@@ -405,6 +416,8 @@ public class MonthWeekEventsView extends SimpleWeekView {
         mMonthNumPaint.setStyle(Style.FILL);
         mMonthNumPaint.setTextAlign(Align.RIGHT);
         mMonthNumPaint.setTypeface(Typeface.DEFAULT);
+        mLunarPaint = new Paint(mMonthNumPaint);
+        mLunarPaint.setTextSize(LUNAR_NUMBER_SIZE);
 
         mMonthNumAscentHeight = (int) (-mMonthNumPaint.ascent() + 0.5f);
         mMonthNumHeight = (int) (mMonthNumPaint.descent() - mMonthNumPaint.ascent() + 0.5f);
@@ -697,13 +710,11 @@ public class MonthWeekEventsView extends SimpleWeekView {
 
         boolean isFocusMonth = mFocusDay[i];
         boolean isBold = false;
+        String temp = null;
+        Paint lunarPaint = null;
         mMonthNumPaint.setColor(isFocusMonth ? mMonthNumColor : mMonthNumOtherColor);
-
-        // Get the julian monday used to show the lunar info.
-        int julianMonday = Utils.getJulianMondayFromWeeksSinceEpoch(mWeek);
-        Time time = new Time(mTimeZone);
-        time.setJulianDay(julianMonday);
-
+        FontMetrics fm = mMonthNumPaint.getFontMetrics();
+        int lunarTextHeight = (int) Math.ceil(fm.descent - fm.ascent);
         for (; i < numCount; i++) {
             if (mHasToday && todayIndex == i) {
                 mMonthNumPaint.setColor(mMonthNumTodayColor);
@@ -719,64 +730,39 @@ public class MonthWeekEventsView extends SimpleWeekView {
             }
             x = computeDayLeftPosition(i - offset) - (SIDE_PADDING_MONTH_NUMBER);
             canvas.drawText(mDayNumbers[i], x, y, mMonthNumPaint);
+
+            if (MoKeeUtils.isSupportLanguage(false)) {
+                Calendar calendar = Calendar.getInstance();
+                int year = Integer.parseInt(mYearNumbers[i]);
+                int month = Integer.parseInt(mMonthNumbers[i]);
+                int day = Integer.parseInt(mDayNumbers[i]);
+                calendar.set(year, month, day);
+                Lunar lunar = new Lunar(calendar);
+                String SolarTermStr = SolarTerm.getSolarTermStr(year, month, day);
+                String fullchinadatestr = lunar.toString();            			
+                String LunarFestivalStr = LunarFestival.getLunarFestival(fullchinadatestr, lunar);
+                Paint mLunarFestivalPant = new Paint(mLunarPaint);
+                mLunarFestivalPant.setColor(Color.RED);
+                if (SolarTermStr.length() == 0) {
+                    String SolarHoliDayStr=SolarHoliDay.getSolarHoliDay(month, day);
+                    if (SolarHoliDayStr.length() == 0) {
+                        if (LunarFestivalStr.length() != 0) {
+                            canvas.drawText(LunarFestivalStr, x, y + lunarTextHeight - 5, mLunarFestivalPant);
+                        } else {
+                            temp = fullchinadatestr.substring(fullchinadatestr.length() - 2, fullchinadatestr.length());
+                            canvas.drawText(temp, x, y + lunarTextHeight - 5, mLunarPaint);
+                        }
+                    } else {
+                        Paint mSolarPant = new Paint(mLunarPaint);
+                        mSolarPant.setColor(Color.RED);
+                        canvas.drawText(SolarHoliDayStr, x, y + lunarTextHeight - 5, mSolarPant);
+                    }
+                } else {
+                    canvas.drawText(TextUtils.isEmpty(LunarFestivalStr) ? SolarTermStr : LunarFestivalStr, x, y + lunarTextHeight - 5, TextUtils.isEmpty(LunarFestivalStr) ? mLunarPaint : mLunarFestivalPant);
+                }
+            }
             if (isBold) {
                 mMonthNumPaint.setFakeBoldText(isBold = false);
-            }
-
-            if (LunarUtils.showLunar(getContext())) {
-                // adjust the year and month
-                int year = time.year;
-                int month = time.month;
-                int julianMondayDay = time.monthDay;
-                int monthDay = Integer.parseInt(mDayNumbers[i]);
-                if (monthDay != julianMondayDay) {
-                    int offsetDay = monthDay - julianMondayDay;
-                    if (offsetDay > 0 && offsetDay > 6) {
-                        month = month - 1;
-                        if (month < 0) {
-                            month = 11;
-                            year = year - 1;
-                        }
-                    } else if (offsetDay < 0 && offsetDay < -6) {
-                        month = month + 1;
-                        if (month > 11) {
-                            month = 0;
-                            year = year + 1;
-                        }
-                    }
-                }
-
-                ArrayList<String> infos = new ArrayList<String>();
-                LunarUtils.get(getContext(), year, month, monthDay,
-                        LunarUtils.FORMAT_LUNAR_SHORT | LunarUtils.FORMAT_MULTI_FESTIVAL, false,
-                        infos);
-                if (infos.size() > 0) {
-                    float originalTextSize = mMonthNumPaint.getTextSize();
-                    mMonthNumPaint.setTextSize(TEXT_SIZE_LUNAR);
-                    Resources res = getResources();
-                    int mOrientation = res.getConfiguration().orientation;
-
-                    int num = 0;
-                    for (int index = 0; index < infos.size(); index++) {
-                        String info = infos.get(index);
-                        if (TextUtils.isEmpty(info)) continue;
-
-                        int infoX = 0;
-                        int infoY = 0;
-                        if (mOrientation == Configuration.ORIENTATION_LANDSCAPE) {
-                            infoX = x - mMonthNumHeight - TOP_PADDING_MONTH_NUMBER;
-                            infoY = y + (mMonthNumHeight + LUNAR_PADDING_LUNAR) * num;
-                        } else {
-                            infoX = x;
-                            infoY = y + (mMonthNumHeight + LUNAR_PADDING_LUNAR) * (num + 1);
-                        }
-                        canvas.drawText(info, infoX, infoY, mMonthNumPaint);
-                        num = num + 1;
-                    }
-
-                    // restore the text size.
-                    mMonthNumPaint.setTextSize(originalTextSize);
-                }
             }
         }
     }
