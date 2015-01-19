@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2010 The Android Open Source Project
+ * Copyright (C) 2015 The SudaMod Project  
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,11 +36,11 @@ import android.graphics.Paint.FontMetrics;
 import android.graphics.Paint.Style;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
-import android.mokee.lunar.Lunar;
-import android.mokee.lunar.LunarFestival;
-import android.mokee.lunar.SolarHoliDay;
-import android.mokee.lunar.SolarTerm;
-import android.mokee.utils.MoKeeUtils;
+import android.suda.lunar.Lunar;
+import android.suda.lunar.LunarFestival;
+import android.suda.lunar.SolarHoliDay;
+import android.suda.lunar.SolarTerm;
+import android.suda.utils.SudaUtils;
 import android.provider.CalendarContract.Attendees;
 import android.text.TextPaint;
 import android.text.TextUtils;
@@ -731,7 +732,7 @@ public class MonthWeekEventsView extends SimpleWeekView {
             x = computeDayLeftPosition(i - offset) - (SIDE_PADDING_MONTH_NUMBER);
             canvas.drawText(mDayNumbers[i], x, y, mMonthNumPaint);
 
-            if (MoKeeUtils.isSupportLanguage(false)) {
+            if (SudaUtils.isSupportLanguage(false)) {
                 Calendar calendar = Calendar.getInstance();
                 int year = Integer.parseInt(mYearNumbers[i]);
                 int month = Integer.parseInt(mMonthNumbers[i]);

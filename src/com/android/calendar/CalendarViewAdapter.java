@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2011 The Android Open Source Project
+ * Copyright (C) 2015 The SudaMod Project 
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,8 +20,8 @@ package com.android.calendar;
 import com.android.calendar.CalendarController.ViewType;
 
 import android.content.Context;
-import android.mokee.lunar.Lunar;
-import android.mokee.utils.MoKeeUtils;
+import android.suda.lunar.Lunar;
+import android.suda.utils.SudaUtils;
 import android.os.Handler;
 import android.text.format.DateUtils;
 import android.text.format.Time;
@@ -189,7 +190,7 @@ public class CalendarViewAdapter extends BaseAdapter {
             TextView weekDay = (TextView) v.findViewById(R.id.top_button_weekday);
             TextView date = (TextView) v.findViewById(R.id.top_button_date);
 
-            if (MoKeeUtils.isSupportLanguage(false)) {
+            if (SudaUtils.isSupportLanguage(false)) {
                 switch (mCurrentMainView) {
                 case ViewType.DAY:
                     weekDay.setVisibility(View.VISIBLE);
