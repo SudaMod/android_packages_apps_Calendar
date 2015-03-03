@@ -187,6 +187,22 @@ public class MonthWeekEventsView extends SimpleWeekView {
     private int mAnimateTodayAlpha = 0;
     private ObjectAnimator mTodayAnimator = null;
 
+    //2015年法定节假日
+    //一月
+    private int[] JANH = {1, 2, 3};
+    //二月
+    private int[] FEBH = {18, 19, 20, 21, 22, 23, 24};
+    //四月
+    private int[] APRH = {4, 5, 6};
+    //五月
+    private int[] MAYH = {1, 2, 3};
+    //六月
+    private int[] JUNH = {20, 21, 22};
+    //九月
+    private int[] SEPH = {26, 27};
+    //十月
+    private int[] OCTH = {1, 2, 3, 4, 5, 6, 7};
+
     private final TodayAnimatorListener mAnimatorListener = new TodayAnimatorListener();
 
     class TodayAnimatorListener extends AnimatorListenerAdapter {
@@ -549,6 +565,61 @@ public class MonthWeekEventsView extends SimpleWeekView {
         return mHasToday;
     }
 
+    public boolean isHoliday(int y, int m, int d) {
+        boolean bResult = false;
+        if( y == 2015 ){
+            switch(m) {
+                case 1:
+                  Log.wtf("DateView", y + "/" + m + "/"+ d);
+                  for(int tmp:JANH){
+                      if(d == tmp) bResult=true;
+                  }
+                break;
+                case 2:
+                  for(int tmp:FEBH){
+                      if(d == tmp) bResult=true;
+                  }
+                break;
+                case 3:
+                break;
+                case 4:
+                  for(int tmp:APRH){
+                      if(d == tmp) bResult=true;
+                  }
+                break;
+                case 5:
+                  for(int tmp:MAYH){
+                      if(d == tmp) bResult=true;
+                  }
+                break;
+                case 6:
+                  for(int tmp:JUNH){
+                      if(d == tmp) bResult=true;
+                  }
+                break;
+                case 7:
+                break;
+                case 8:
+                break;
+                case 9:
+                  for(int tmp:SEPH){
+                      if(d == tmp) bResult=true;
+                  }
+                break;
+                case 10:
+                  for(int tmp:OCTH){
+                      if(d == tmp) bResult=true;
+                  }
+                break;
+                case 11:
+                break;
+                case 12:
+                break;
+            }
+        }
+        return bResult;
+    }
+
     public void setAnimateTodayAlpha(int alpha) {
         mAnimateTodayAlpha = alpha;
         invalidate();
@@ -738,9 +809,10 @@ public class MonthWeekEventsView extends SimpleWeekView {
                 int month = Integer.parseInt(mMonthNumbers[i]);
                 int day = Integer.parseInt(mDayNumbers[i]);
                 calendar.set(year, month, day);
+                boolean holiday = isHoliday(year ,month + 1, day);
                 Lunar lunar = new Lunar(calendar);
                 String SolarTermStr = SolarTerm.getSolarTermStr(year, month, day);
-                String fullchinadatestr = lunar.toString();            			
+                String fullchinadatestr = lunar.toString();
                 String LunarFestivalStr = LunarFestival.getLunarFestival(fullchinadatestr, lunar);
                 Paint mLunarFestivalPant = new Paint(mLunarPaint);
                 mLunarFestivalPant.setColor(Color.RED);
@@ -761,6 +833,8 @@ public class MonthWeekEventsView extends SimpleWeekView {
                 } else {
                     canvas.drawText(TextUtils.isEmpty(LunarFestivalStr) ? SolarTermStr : LunarFestivalStr, x, y + lunarTextHeight - 5, TextUtils.isEmpty(LunarFestivalStr) ? mLunarPaint : mLunarFestivalPant);
                 }
+                //法定假日显示
+                canvas.drawText(holiday ? "假" : "", x - 80, y - 5, mLunarFestivalPant);
             }
             if (isBold) {
                 mMonthNumPaint.setFakeBoldText(isBold = false);
