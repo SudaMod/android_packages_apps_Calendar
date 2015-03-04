@@ -92,6 +92,7 @@ public class MonthWeekEventsView extends SimpleWeekView {
 
     private static int DEFAULT_EDGE_SPACING = 0;
     private static int SIDE_PADDING_MONTH_NUMBER = 4;
+    private static int TOP_PADDING_HOLIDAY = 15;
     private static int TOP_PADDING_MONTH_NUMBER = 4;
     private static int TOP_PADDING_WEEK_NUMBER = 4;
     private static int SIDE_PADDING_WEEK_NUMBER = 20;
@@ -382,6 +383,7 @@ public class MonthWeekEventsView extends SimpleWeekView {
             EVENT_TEXT_COLOR = resources.getColor(R.color.calendar_event_text_color);
             if (mScale != 1) {
                 TOP_PADDING_MONTH_NUMBER *= mScale;
+                TOP_PADDING_HOLIDAY *= mScale;
                 TOP_PADDING_WEEK_NUMBER *= mScale;
                 SIDE_PADDING_MONTH_NUMBER *= mScale;
                 SIDE_PADDING_WEEK_NUMBER *= mScale;
@@ -834,7 +836,7 @@ public class MonthWeekEventsView extends SimpleWeekView {
                     canvas.drawText(TextUtils.isEmpty(LunarFestivalStr) ? SolarTermStr : LunarFestivalStr, x, y + lunarTextHeight - 5, TextUtils.isEmpty(LunarFestivalStr) ? mLunarPaint : mLunarFestivalPant);
                 }
                 //法定假日显示
-                canvas.drawText(holiday ? "假" : "", x - 80, y - 5, mLunarFestivalPant);
+                canvas.drawText(holiday ? "假" : "", x, y + lunarTextHeight + TOP_PADDING_HOLIDAY, mLunarFestivalPant);
             }
             if (isBold) {
                 mMonthNumPaint.setFakeBoldText(isBold = false);
