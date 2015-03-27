@@ -209,7 +209,6 @@ public class CalendarViewAdapter extends BaseAdapter {
                     break;
                 case ViewType.YEAR:
                     weekDay.setVisibility(View.GONE);
-                    lunarInfo.setVisibility(View.GONE);
                     date.setText(buildYearDate());
                     break;
                 default:
